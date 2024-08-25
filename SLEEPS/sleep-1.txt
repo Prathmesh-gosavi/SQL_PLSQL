@@ -1,0 +1,124 @@
+Q) Consider the following database
+
+	Room (room_no,room_name,room_type,charges)
+	Guest(Guest_code, Gname,city)
+
+	The relationship is as follows: Room-Guest: one-to-one. room_type can have values 
+	as either ‘AC’ or‘NonAC’.
+Q 2)
+
+A --> Create the above database in PostGreSQL and insert sufficient records.
+
+
+B-->Execute the following queries in PostGreSQL
+
+	i.  	List the details of the rooms having charges between 5000 and 10000.
+
+	ii.		List the names of the guests in the sorted order by city name.
+
+	iii.	List the minimum charges of a room.
+
+	iv.		Increase the charges of all AC rooms by 15%.
+
+    v.  	List the names of all the NONAC rooms whose charges are more than 10000.
+
+
+
+C--> write a query to List the name of the guest to whom the room with highest charges is allotted.
+
+
+
+OR
+
+
+
+Create a view to list the names of all the NonAC rooms that have their
+charges greater than at least one of the ‘AC’ room.
+
+
+=============
+solution
+=============
+
+
+
+Room (room_no,room_name,room_type,charges)
+	Guest(Guest_code, Gname,city)
+
+	The relationship is as follows: Room-Guest: one-to-one. room_type can have values 
+	as either ‘AC’ or‘NonAC’.
+
+
+	CREATE TABLE  Room(room_no int PRIMARY KEY,
+	                  room_name varchar(10) NOT NULL,
+	                  room_type varchar(10) CHECK(room_type='NonAc' OR room_type='Ac'),
+	                  charges float CHECK(charges>0) );
+
+	CREATE TABLE  Guest(guest_code int PRIMARY KEY,
+						gname varchar NOT NULL,
+						city text,
+						room_no  int references Room(room_no)ON DELETE CASCADE ON UPDATE CASCADE UNIQUE);
+
+
+
+    INSERT INTO Room VALUES(1,'aaa','Ac',   50000);
+    INSERT INTO Room VALUES(2,'bbb','NonAc',5000);
+    INSERT INTO Room VALUES(3,'ccc','Ac',   11000);
+    INSERT INTO Room VALUES(4,'ddd','NonAc',6000);
+    INSERT INTO Room VALUES(5,'eee','Ac',   140000);
+
+    INSERT INTO Guest VALUES(101,'www','pune',1);
+    INSERT INTO Guest VALUES(102,'xxx','solapur',2);
+    INSERT INTO Guest VALUES(103,'yyy','satara',3);
+    INSERT INTO Guest VALUES(104,'zzz','pune',4);
+    INSERT INTO Guest VALUES(105,'vvv','panji',5);
+
+---------------------------------------------------------------------------------------
+B--->
+
+
+
+  1--> select * from room where charges >=5000 and charges <=10000;
+
+  2-->  select * from guest order by city asc;
+  					
+  					or
+
+		select gname from guest order by city;
+
+  3--> select * from room where charges=(select min(charges) from room) ;
+
+
+  4--> UPDATE room SET charges = charges * 1.15 WHERE room_type = 'Ac';
+  
+  5--> select * from room where room_type='NonAc'and charges>1000;
+
+ --------------------------------------------------------------------------------------
+
+ C--> 
+
+select  gname 
+from room , Guest
+where Room.room_no = Guest.room_no
+and charges = (select max(charges) from room); 
+
+
+----------------------------------------------------------------------------------------
+VIEW
+
+
+
+Create a view to list the names of all the NonAC rooms that have their
+charges greater than at least one of the ‘AC’ room
+
+
+
+CREATE VIEW NonAC_Rooms_Higher_Than_AC AS
+SELECT room_name
+FROM Room AS nonac_room
+WHERE nonac_room.room_type = 'NonAC'
+AND nonac_room.charges > (
+    SELECT MIN(ac_room.charges)
+    FROM Room AS ac_room
+    WHERE ac_room.room_type = 'AC'
+);

@@ -1,0 +1,4 @@
+
+IN
+
+where city in ('pune','mumbai');
